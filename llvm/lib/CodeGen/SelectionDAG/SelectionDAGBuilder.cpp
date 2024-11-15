@@ -7370,6 +7370,7 @@ void SelectionDAGBuilder::visitIntrinsicCall(const CallInst &I,
   case Intrinsic::experimental_noalias_scope_decl:
   case Intrinsic::var_annotation:
   case Intrinsic::sideeffect:
+  case Intrinsic::bsan_retag:
     // Discard annotate attributes, noalias scope declarations, assumptions, and
     // artificial side-effects.
     return;
