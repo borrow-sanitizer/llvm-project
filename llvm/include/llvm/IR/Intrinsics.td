@@ -1843,7 +1843,7 @@ def int_experimental_stepvector : DefaultAttrsIntrinsic<[llvm_anyvector_ty],
 
 // Intrinsic inserted by the Rust frontent and lowered by BorrowSanitizer to update 
 // the permissions associated with a pointer.
-def int_bsan_retag : Intrinsic<[], [llvm_ptr_ty], []>;
+def int_bsan_retag : Intrinsic<[], [llvm_ptr_ty, llvm_i8_ty], []>;
 
 //===---------------- Vector Predication Intrinsics --------------===//
 // Memory Intrinsics
