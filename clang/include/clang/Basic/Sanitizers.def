@@ -40,6 +40,9 @@
 // AddressSanitizer
 SANITIZER("address", Address)
 
+// BorrowSanitizer
+SANITIZER("borrow", Borrow)
+
 // Requires AddressSanitizer
 SANITIZER("pointer-compare", PointerCompare)
 

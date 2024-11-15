@@ -215,6 +215,12 @@ MODULE_PASS_WITH_PARAMS(
       return StructuralHashPrinterPass(dbgs(), EnableDetailedStructuralHash);
     },
     parseStructuralHashPrinterPassOptions, "detailed")
+MODULE_PASS_WITH_PARAMS(
+    "bsan", "BorrowSanitizerPass",
+    [](BorrowSanitizerOptions Opts) {
+      return BorrowSanitizerPass(Opts);
+    },
+    parseBorrowSanitizerPassOptions, "")
 #undef MODULE_PASS_WITH_PARAMS
 
 #ifndef CGSCC_ANALYSIS

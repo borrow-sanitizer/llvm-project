@@ -282,6 +282,9 @@ def StructRet : TypeAttr<"sret", [ParamAttr]>;
 /// AddressSanitizer is on.
 def SanitizeAddress : EnumAttr<"sanitize_address", [FnAttr]>;
 
+/// BorrowSanitizer is on.
+def SanitizeBorrow : EnumAttr<"sanitize_borrow", [FnAttr]>;
+
 /// ThreadSanitizer is on.
 def SanitizeThread : EnumAttr<"sanitize_thread", [FnAttr]>;
 
