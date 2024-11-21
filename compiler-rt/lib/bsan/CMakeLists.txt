@@ -4,79 +4,49 @@ set(BSAN_SOURCES
   bsan.cpp
   )
 
-#if (NOT WIN32 AND NOT APPLE)
-#  list(APPEND BSAN_SOURCES
-#    bsan_interceptors_vfork.S
-#    )
-#endif()
-
 set(BSAN_CXX_SOURCES
   )
 
-set(bsan_STATIC_SOURCES
-  )
-
-#if ("x86_64" IN_LIST BSAN_SUPPORTED_ARCH AND NOT WIN32 AND NOT APPLE)
-#  list(APPEND BSAN_STATIC_SOURCES
-#    bsan_rtl_x86_64.S
-#  )
-#endif()
-
-set(BSAN_PREINIT_SOURCES
-)
-
 SET(BSAN_HEADERS
-  bsan_interface_internal.h
+  bsan.h
+  borrowtracker.h
 )
 
 include_directories(..)
 
 set(BSAN_CFLAGS ${SANITIZER_COMMON_CFLAGS})
 
-append_list_if(MSVC /Zl BSAN_CFLAGS)
-
 set(BSAN_COMMON_DEFINITIONS "")
 
 append_rtti_flag(OFF BSAN_CFLAGS)
-
-# Silence warnings in system headers with MSVC.
-if(NOT CLANG_CL)
-  append_list_if(COMPILER_RT_HAS_EXTERNAL_FLAG "/experimental:external;/external:W0;/external:anglebrackets" BSAN_CFLAGS)
-endif()
 
 # Too many existing bugs, needs cleanup.
 append_list_if(COMPILER_RT_HAS_WNO_FORMAT -Wno-format BSAN_CFLAGS)
 
 set(BSAN_DYNAMIC_LINK_FLAGS ${SANITIZER_COMMON_LINK_FLAGS})
 
-if(ANDROID)
-# Put most Sanitizer shared libraries in the global group. For more details, see
-# android-changes-for-ndk-developers.md#changes-to-library-search-order
-  if (COMPILER_RT_HAS_Z_GLOBAL)
-    list(APPEND BSAN_DYNAMIC_LINK_FLAGS -Wl,-z,global)
-  endif()
-endif()
-
 set(BSAN_DYNAMIC_DEFINITIONS
   ${BSAN_COMMON_DEFINITIONS} BSAN_DYNAMIC=1)
-append_list_if(WIN32 INTERCEPTION_DYNAMIC_CRT BSAN_DYNAMIC_DEFINITIONS)
 
 set(BSAN_DYNAMIC_CFLAGS ${BSAN_CFLAGS})
 append_list_if(COMPILER_RT_HAS_FTLS_MODEL_INITIAL_EXEC
   -ftls-model=initial-exec BSAN_DYNAMIC_CFLAGS)
-append_list_if(MSVC /DEBUG BSAN_DYNAMIC_LINK_FLAGS)
 
-set(bsan_DYNAMIC_LIBS
+set(BSAN_DYNAMIC_LIBS
   ${COMPILER_RT_UNWINDER_LINK_LIBS}
   ${SANITIZER_CXX_ABI_LIBRARIES}
-  ${SANITIZER_COMMON_LINK_LIBS})
+  ${SANITIZER_COMMON_LINK_LIBS}
+  borrowtracker)
+
+if(COMPILER_RT_DEFAULT_TARGET_ONLY)
+  set(BSAN_SUPPORTED_ARCH ${CMAKE_HOST_SYSTEM_PROCESSOR})
+endif()
 
 append_list_if(COMPILER_RT_HAS_LIBDL dl BSAN_DYNAMIC_LIBS)
 append_list_if(COMPILER_RT_HAS_LIBRT rt BSAN_DYNAMIC_LIBS)
 append_list_if(COMPILER_RT_HAS_LIBM m BSAN_DYNAMIC_LIBS)
 append_list_if(COMPILER_RT_HAS_LIBPTHREAD pthread BSAN_DYNAMIC_LIBS)
 append_list_if(COMPILER_RT_HAS_LIBLOG log BSAN_DYNAMIC_LIBS)
-append_list_if(MINGW "${MINGW_LIBRARIES}" BSAN_DYNAMIC_LIBS)
 
 # Compile bsan sources into an object library.
 
@@ -101,18 +71,6 @@ if(NOT APPLE)
     ADDITIONAL_HEADERS ${BSAN_HEADERS}
     CFLAGS ${BSAN_CFLAGS}
     DEFS ${BSAN_COMMON_DEFINITIONS})
-  add_compiler_rt_object_libraries(RTBsan_static
-    ARCHS ${BSAN_SUPPORTED_ARCH}
-    SOURCES ${bsan_STATIC_SOURCES}
-    ADDITIONAL_HEADERS ${BSAN_HEADERS}
-    CFLAGS ${BSAN_CFLAGS}
-    DEFS ${BSAN_COMMON_DEFINITIONS})
-  add_compiler_rt_object_libraries(RTBsan_preinit
-    ARCHS ${BSAN_SUPPORTED_ARCH}
-    SOURCES ${bsan_PREINIT_SOURCES}
-    ADDITIONAL_HEADERS ${BSAN_HEADERS}
-    CFLAGS ${BSAN_CFLAGS}
-    DEFS ${BSAN_COMMON_DEFINITIONS})
 
   file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/dummy.cpp "")
   add_compiler_rt_object_libraries(RTBsan_dynamic_version_script_dummy
@@ -128,7 +86,6 @@ add_compiler_rt_component(bsan)
 if(APPLE)
   add_weak_symbols("bsan" WEAK_SYMBOL_LINK_FLAGS)
   add_weak_symbols("sanitizer_common" WEAK_SYMBOL_LINK_FLAGS)
-  add_weak_symbols("xray" WEAK_SYMBOL_LINK_FLAGS)
 
   add_compiler_rt_runtime(clang_rt.bsan
     SHARED
@@ -143,19 +100,13 @@ if(APPLE)
     CFLAGS ${BSAN_DYNAMIC_CFLAGS}
     LINK_FLAGS ${WEAK_SYMBOL_LINK_FLAGS}
     DEFS ${BSAN_DYNAMIC_DEFINITIONS}
+    LINK_LIBS ${BSAN_DYNAMIC_LIBS}
     PARENT_TARGET bsan)
 
-  add_compiler_rt_runtime(clang_rt.bsan_static
-    STATIC
-    ARCHS ${BSAN_SUPPORTED_ARCH}
-    OBJECT_LIBS RTBsan_static
-    CFLAGS ${BSAN_CFLAGS}
-    DEFS ${BSAN_COMMON_DEFINITIONS}
-    PARENT_TARGET bsan)
 else()
   # Build separate libraries for each target.
 
-  set(bsan_COMMON_RUNTIME_OBJECT_LIBS
+  set(BSAN_COMMON_RUNTIME_OBJECT_LIBS
     RTInterception
     RTSanitizerCommon
     RTSanitizerCommonLibc
@@ -167,9 +118,8 @@ else()
   add_compiler_rt_runtime(clang_rt.bsan
     STATIC
     ARCHS ${BSAN_SUPPORTED_ARCH}
-    OBJECT_LIBS RTBsan_preinit
-                RTBsan
-                ${bsan_COMMON_RUNTIME_OBJECT_LIBS}
+    OBJECT_LIBS RTBsan
+                ${BSAN_COMMON_RUNTIME_OBJECT_LIBS}
     CFLAGS ${BSAN_CFLAGS}
     DEFS ${BSAN_COMMON_DEFINITIONS}
     PARENT_TARGET bsan)
@@ -178,22 +128,6 @@ else()
     STATIC
     ARCHS ${BSAN_SUPPORTED_ARCH}
     OBJECT_LIBS RTBsan_cxx
-    CFLAGS ${BSAN_CFLAGS}
-    DEFS ${BSAN_COMMON_DEFINITIONS}
-    PARENT_TARGET bsan)
-
-  add_compiler_rt_runtime(clang_rt.bsan_static
-    STATIC
-    ARCHS ${BSAN_SUPPORTED_ARCH}
-    OBJECT_LIBS RTBsan_static
-    CFLAGS ${BSAN_CFLAGS}
-    DEFS ${BSAN_COMMON_DEFINITIONS}
-    PARENT_TARGET bsan)
-
-  add_compiler_rt_runtime(clang_rt.bsan-preinit
-    STATIC
-    ARCHS ${BSAN_SUPPORTED_ARCH}
-    OBJECT_LIBS RTBsan_preinit
     CFLAGS ${BSAN_CFLAGS}
     DEFS ${BSAN_COMMON_DEFINITIONS}
     PARENT_TARGET bsan)
@@ -218,25 +152,12 @@ else()
       set(VERSION_SCRIPT_FLAG)
     endif()
 
-    set(bsan_DYNAMIC_WEAK_INTERCEPTION)
-    if (WIN32)
-      add_compiler_rt_object_libraries(bsanWeakInterception
-        ${SANITIZER_COMMON_SUPPORTED_OS}
-        ARCHS ${arch}
-        SOURCES
-          bsan_win_weak_interception.cpp
-        CFLAGS ${BSAN_CFLAGS} -DSANITIZER_DYNAMIC
-        DEFS ${BSAN_COMMON_DEFINITIONS})
-      set(bsan_DYNAMIC_WEAK_INTERCEPTION
-          bsanWeakInterception
-          SancovWeakInterception
-          SanitizerCommonWeakInterception)
-    endif()
+    set(BSAN_DYNAMIC_WEAK_INTERCEPTION)
 
     add_compiler_rt_runtime(clang_rt.bsan
       SHARED
       ARCHS ${arch}
-      OBJECT_LIBS ${bsan_COMMON_RUNTIME_OBJECT_LIBS}
+      OBJECT_LIBS ${BSAN_COMMON_RUNTIME_OBJECT_LIBS}
               RTBsan_dynamic
               # The only purpose of RTBsan_dynamic_version_script_dummy is to
               # carry a dependency of the shared runtime on the version script.
@@ -244,15 +165,15 @@ else()
               # add_dependencies(clang_rt.bsan-dynamic-${arch} clang_rt.bsan-dynamic-${arch}-version-list)
               # generates an order-only dependency in ninja.
               RTBsan_dynamic_version_script_dummy
-              ${bsan_DYNAMIC_WEAK_INTERCEPTION}
+              ${BSAN_DYNAMIC_WEAK_INTERCEPTION}
       CFLAGS ${BSAN_DYNAMIC_CFLAGS}
       LINK_FLAGS ${BSAN_DYNAMIC_LINK_FLAGS}
                 ${VERSION_SCRIPT_FLAG}
-      LINK_LIBS ${bsan_DYNAMIC_LIBS}
+      LINK_LIBS ${BSAN_DYNAMIC_LIBS}
       DEFS ${BSAN_DYNAMIC_DEFINITIONS}
       PARENT_TARGET bsan)
 
-    if (SANITIZER_USE_SYMBOLS AND NOT ${arch} STREQUAL "i386")
+    if (SANITIZER_USE_SYMBOLS)
       add_sanitizer_rt_symbols(clang_rt.bsan_cxx
         ARCHS ${arch})
       add_dependencies(bsan clang_rt.bsan_cxx-${arch}-symbols)
@@ -260,50 +181,6 @@ else()
         ARCHS ${arch}
         EXTRA bsan.syms.extra)
       add_dependencies(bsan clang_rt.bsan-${arch}-symbols)
-    endif()
-
-    if (WIN32)
-      add_compiler_rt_object_libraries(bsanDllThunk
-        ${SANITIZER_COMMON_SUPPORTED_OS}
-        ARCHS ${arch}
-        SOURCES bsan_globals_win.cpp
-                bsan_win_dll_thunk.cpp
-        CFLAGS ${BSAN_CFLAGS} -DSANITIZER_DLL_THUNK
-        DEFS ${BSAN_COMMON_DEFINITIONS})
-
-      add_compiler_rt_runtime(clang_rt.bsan_dll_thunk
-        STATIC
-        ARCHS ${arch}
-        OBJECT_LIBS bsanDllThunk
-                    SancovDllThunk
-                    SanitizerCommonDllThunk
-        SOURCES $<TARGET_OBJECTS:RTInterception.${arch}>
-        PARENT_TARGET bsan)
-
-      set(DYNAMIC_RUNTIME_THUNK_CFLAGS "-DSANITIZER_DYNAMIC_RUNTIME_THUNK")
-      if(MSVC)
-        list(APPEND DYNAMIC_RUNTIME_THUNK_CFLAGS "-Zl")
-      elseif(CMAKE_C_COMPILER_ID MATCHES Clang)
-        list(APPEND DYNAMIC_RUNTIME_THUNK_CFLAGS "-nodefaultlibs")
-      endif()
-
-      add_compiler_rt_object_libraries(bsanDynamicRuntimeThunk
-        ${SANITIZER_COMMON_SUPPORTED_OS}
-        ARCHS ${arch}
-        SOURCES bsan_globals_win.cpp
-                bsan_win_dynamic_runtime_thunk.cpp
-        CFLAGS ${BSAN_CFLAGS} ${DYNAMIC_RUNTIME_THUNK_CFLAGS}
-        DEFS ${BSAN_COMMON_DEFINITIONS})
-
-      add_compiler_rt_runtime(clang_rt.bsan_dynamic_runtime_thunk
-        STATIC
-        ARCHS ${arch}
-        OBJECT_LIBS bsanDynamicRuntimeThunk
-                    SancovDynamicRuntimeThunk
-                    SanitizerCommonDynamicRuntimeThunk
-        CFLAGS ${BSAN_CFLAGS} ${DYNAMIC_RUNTIME_THUNK_CFLAGS}
-        DEFS ${BSAN_COMMON_DEFINITIONS}
-        PARENT_TARGET bsan)
     endif()
   endforeach()
 endif()

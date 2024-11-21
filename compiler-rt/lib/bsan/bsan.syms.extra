@@ -1,1 +1,3 @@
+bsan_*
 __bsan_*
+_bsan_*
