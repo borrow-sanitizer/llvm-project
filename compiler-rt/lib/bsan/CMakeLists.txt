@@ -5,6 +5,7 @@ set(BSAN_SOURCES
   )
 
 set(BSAN_CXX_SOURCES
+  
   )
 
 SET(BSAN_HEADERS
@@ -65,12 +66,13 @@ if(NOT APPLE)
     ADDITIONAL_HEADERS ${BSAN_HEADERS}
     CFLAGS ${BSAN_CFLAGS}
     DEFS ${BSAN_COMMON_DEFINITIONS})
-  add_compiler_rt_object_libraries(RTBsan_cxx
-    ARCHS ${BSAN_SUPPORTED_ARCH}
-    SOURCES ${BSAN_CXX_SOURCES}
-    ADDITIONAL_HEADERS ${BSAN_HEADERS}
-    CFLAGS ${BSAN_CFLAGS}
-    DEFS ${BSAN_COMMON_DEFINITIONS})
+
+  #add_compiler_rt_object_libraries(RTBsan_cxx
+  #  ARCHS ${BSAN_SUPPORTED_ARCH}
+  #  SOURCES ${BSAN_CXX_SOURCES}
+  #  ADDITIONAL_HEADERS ${BSAN_HEADERS}
+  #  CFLAGS ${BSAN_CFLAGS}
+  #  DEFS ${BSAN_COMMON_DEFINITIONS})
 
   file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/dummy.cpp "")
   add_compiler_rt_object_libraries(RTBsan_dynamic_version_script_dummy
@@ -124,18 +126,18 @@ else()
     DEFS ${BSAN_COMMON_DEFINITIONS}
     PARENT_TARGET bsan)
 
-  add_compiler_rt_runtime(clang_rt.bsan_cxx
-    STATIC
-    ARCHS ${BSAN_SUPPORTED_ARCH}
-    OBJECT_LIBS RTBsan_cxx
-    CFLAGS ${BSAN_CFLAGS}
-    DEFS ${BSAN_COMMON_DEFINITIONS}
-    PARENT_TARGET bsan)
+#  add_compiler_rt_runtime(clang_rt.bsan_cxx
+#    STATIC
+#    ARCHS ${BSAN_SUPPORTED_ARCH}
+#    OBJECT_LIBS RTBsan_cxx
+#    CFLAGS ${BSAN_CFLAGS}
+#    DEFS ${BSAN_COMMON_DEFINITIONS}
+#    PARENT_TARGET bsan)
 
   foreach(arch ${BSAN_SUPPORTED_ARCH})
     if (COMPILER_RT_HAS_VERSION_SCRIPT)
       add_sanitizer_rt_version_list(clang_rt.bsan-dynamic-${arch}
-                                    LIBS clang_rt.bsan-${arch} clang_rt.bsan_cxx-${arch}
+                                    LIBS clang_rt.bsan-${arch} # clang_rt.bsan_cxx-${arch}
                                     EXTRA bsan.syms.extra)
       set(VERSION_SCRIPT_FLAG
            -Wl,--version-script,${CMAKE_CURRENT_BINARY_DIR}/clang_rt.bsan-dynamic-${arch}.vers)
@@ -174,9 +176,9 @@ else()
       PARENT_TARGET bsan)
 
     if (SANITIZER_USE_SYMBOLS)
-      add_sanitizer_rt_symbols(clang_rt.bsan_cxx
-        ARCHS ${arch})
-      add_dependencies(bsan clang_rt.bsan_cxx-${arch}-symbols)
+      # add_sanitizer_rt_symbols(clang_rt.bsan_cxx
+      #  ARCHS ${arch})
+      # add_dependencies(bsan clang_rt.bsan_cxx-${arch}-symbols)
       add_sanitizer_rt_symbols(clang_rt.bsan
         ARCHS ${arch}
         EXTRA bsan.syms.extra)
