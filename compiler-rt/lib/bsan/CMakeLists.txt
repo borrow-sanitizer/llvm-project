@@ -4,6 +4,10 @@ set(BSAN_SOURCES
   bsan.cpp
   )
 
+set(BSAN_PREINIT_SOURCES
+  bsan_preinit.cpp
+  )
+
 set(BSAN_CXX_SOURCES
   
   )
@@ -74,6 +78,13 @@ if(NOT APPLE)
   #  CFLAGS ${BSAN_CFLAGS}
   #  DEFS ${BSAN_COMMON_DEFINITIONS})
 
+  add_compiler_rt_object_libraries(RTBsan_preinit
+    ARCHS ${BSAN_SUPPORTED_ARCH}
+    SOURCES ${BSAN_PREINIT_SOURCES}
+    ADDITIONAL_HEADERS ${BSAN_HEADERS}
+    CFLAGS ${BSAN_CFLAGS}
+    DEFS ${BSAN_COMMON_DEFINITIONS})
+
   file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/dummy.cpp "")
   add_compiler_rt_object_libraries(RTBsan_dynamic_version_script_dummy
     ARCHS ${BSAN_SUPPORTED_ARCH}
@@ -120,7 +131,8 @@ else()
   add_compiler_rt_runtime(clang_rt.bsan
     STATIC
     ARCHS ${BSAN_SUPPORTED_ARCH}
-    OBJECT_LIBS RTBsan
+    OBJECT_LIBS RTBsan_preinit
+                RTBsan
                 ${BSAN_COMMON_RUNTIME_OBJECT_LIBS}
     CFLAGS ${BSAN_CFLAGS}
     DEFS ${BSAN_COMMON_DEFINITIONS}
@@ -133,6 +145,14 @@ else()
 #    CFLAGS ${BSAN_CFLAGS}
 #    DEFS ${BSAN_COMMON_DEFINITIONS}
 #    PARENT_TARGET bsan)
+
+  add_compiler_rt_runtime(clang_rt.bsan-preinit
+    STATIC
+    ARCHS ${BSAN_SUPPORTED_ARCH}
+    OBJECT_LIBS RTBsan_preinit
+    CFLAGS ${BSAN_CFLAGS}
+    DEFS ${BSAN_COMMON_DEFINITIONS}
+    PARENT_TARGET bsan)
 
   foreach(arch ${BSAN_SUPPORTED_ARCH})
     if (COMPILER_RT_HAS_VERSION_SCRIPT)
