@@ -1,7 +1,7 @@
 #ifndef BSAN_H
 #define BSAN_H
 
-#include "borrowtracker.h"
+#include "bsanrt.h"
 #include "sanitizer_common/sanitizer_common.h"
 #include "sanitizer_common/sanitizer_flag_parser.h"
 #include "sanitizer_common/sanitizer_flags.h"
