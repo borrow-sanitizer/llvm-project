@@ -1,8 +1,7 @@
-#include <cstdarg>
-#include <cstdint>
-#include <cstdlib>
-#include <ostream>
-#include <new>
+#ifndef BSANRT_H
+#define BSANRT_H
+
+#include <stdint.h>
 
 /// A thread identifier.
 struct ThreadId;
@@ -26,3 +25,5 @@ void bsan_func_entry();
 void bsan_func_exit();
 
 }  // extern "C"
+
+#endif  // BSANRT_H
