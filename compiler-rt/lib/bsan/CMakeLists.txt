@@ -14,7 +14,7 @@ set(BSAN_CXX_SOURCES
 
 SET(BSAN_HEADERS
   bsan.h
-  borrowtracker.h
+  bsanrt.h
 )
 
 include_directories(..)
@@ -41,7 +41,7 @@ set(BSAN_DYNAMIC_LIBS
   ${COMPILER_RT_UNWINDER_LINK_LIBS}
   ${SANITIZER_CXX_ABI_LIBRARIES}
   ${SANITIZER_COMMON_LINK_LIBS}
-  borrowtracker)
+  bsanrt)
 
 if(COMPILER_RT_DEFAULT_TARGET_ONLY)
   set(BSAN_SUPPORTED_ARCH ${CMAKE_HOST_SYSTEM_PROCESSOR})
