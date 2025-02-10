@@ -35,18 +35,20 @@ extern "C" SANITIZER_INTERFACE_ATTRIBUTE void __bsan_func_exit() {
   return bsanrt::bsan_func_exit();
 }
 
-extern "C" SANITIZER_INTERFACE_ATTRIBUTE uint64_t
-__bsan_retag(void *ptr, uint8_t retag_kind, uint8_t place_kind) {
-  return bsanrt::bsan_retag(ptr, retag_kind, place_kind, rust_alloctor);
+extern "C" SANITIZER_INTERFACE_ATTRIBUTE usize __bsan_retag(void *ptr,
+                                                            u8 retag_kind,
+                                                            u8 place_kind) {
+  return bsanrt::bsan_retag(ptr, retag_kind, place_kind,
+                            rust_alloctor);
 }
 
-extern "C" SANITIZER_INTERFACE_ATTRIBUTE void
-__bsan_write(void *ptr, uint64_t access_size) {
+extern "C" SANITIZER_INTERFACE_ATTRIBUTE void __bsan_write(void *ptr,
+                                                           u64 access_size) {
   bsanrt::bsan_write(ptr, access_size, 0, 0);
 }
 
-extern "C" SANITIZER_INTERFACE_ATTRIBUTE void
-__bsan_read(void *ptr, uint64_t access_size) {
+extern "C" SANITIZER_INTERFACE_ATTRIBUTE void __bsan_read(void *ptr,
+                                                          u64 access_size) {
   bsanrt::bsan_read(ptr, access_size, 0, 0);
 }
 
