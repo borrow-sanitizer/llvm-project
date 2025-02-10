@@ -2,23 +2,25 @@
 #define BSAN_H
 
 #include "bsanrt.h"
-#include "sanitizer_common/sanitizer_common.h"
-#include "sanitizer_common/sanitizer_flag_parser.h"
-#include "sanitizer_common/sanitizer_flags.h"
-
 #include "interception/interception.h"
+#include "sanitizer_common/sanitizer_common.h"
 #include "sanitizer_common/sanitizer_libc.h"
-#include "sanitizer_common/sanitizer_linux.h"
 #include "sanitizer_common/sanitizer_platform_interceptors.h"
-
 #include "sanitizer_common/sanitizer_internal_defs.h"
+#include "sanitizer_common/sanitizer_atomic.h"
 
 using __sanitizer::uptr;
 
-namespace __bsan {} // namespace __bsan
+namespace __bsan {
+    extern bool bsan_inited;
+    extern bool bsan_init_is_running;
 
-extern "C" {
-SANITIZER_INTERFACE_ATTRIBUTE void __bsan_init();
-}
+    void InitializeInterceptors();
+    void InitializeShadowMemory();
+    void DestroyShadowMemory();
+    uptr NextAllocId();
+} // namespace __bsan
+
+
 
 #endif

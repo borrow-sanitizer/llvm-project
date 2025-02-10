@@ -2,6 +2,7 @@
 
 set(BSAN_SOURCES
   bsan.cpp
+  bsan_interceptors.cpp
   )
 
 set(BSAN_PREINIT_SOURCES
@@ -15,6 +16,7 @@ set(BSAN_CXX_SOURCES
 SET(BSAN_HEADERS
   bsan.h
   bsanrt.h
+  bsan_interceptors.h
 )
 
 include_directories(..)
