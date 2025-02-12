@@ -218,23 +218,38 @@ void BorrowSanitizer::initializeCallbacks(Module &M,
 
 }
 
-bool BorrowSanitizer::instrumentAlloca(Instruction &I) {}
+bool BorrowSanitizer::instrumentAlloca(Instruction &I) {
+  return false;
+}
 
-bool BorrowSanitizer::instrumentMemIntrinsic(Instruction &I) {}
+bool BorrowSanitizer::instrumentMemIntrinsic(Instruction &I) {
+  return false;
+}
 
-bool BorrowSanitizer::instrumentLoad(Instruction &I) {}
+bool BorrowSanitizer::instrumentLoad(Instruction &I) {
+  return false;
+}
 
-bool BorrowSanitizer::instrumentStore(Instruction &I) {}
+bool BorrowSanitizer::instrumentStore(Instruction &I) {
+  return false;
+}
 
-bool BorrowSanitizer::instrumentCall(Instruction &I) {}
+bool BorrowSanitizer::instrumentCall(Instruction &I) {
+  return false;
+}
 
-bool BorrowSanitizer::instrumentIntToPtr(Instruction &I) {}
+bool BorrowSanitizer::instrumentIntToPtr(Instruction &I) {
+  return false;
+}
 
-bool BorrowSanitizer::instrumentPtrToInt(Instruction &I) {}
+bool BorrowSanitizer::instrumentPtrToInt(Instruction &I) {
+  return false;
+}
 
 bool BorrowSanitizer::instrumentRetag(Instruction &I) {
   CallInst* CIRetag = CallInst::Create(BsanRetagFunc, {I.getOperand(0), I.getOperand(1), I.getOperand(2)});
   ReplaceInstWithInst(&I, CIRetag);
+  return true;
 }
 
 bool BorrowSanitizer::instrumentFunction(Function &F,
