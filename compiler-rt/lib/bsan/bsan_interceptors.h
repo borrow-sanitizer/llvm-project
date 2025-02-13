@@ -2,7 +2,7 @@
 #define BSAN_INTERCEPTORS_H
 
 #include "bsan.h"
-#include "bsanrt.h"
+#include "bsan_rt.h"
 #include "interception/interception.h"
 #include "sanitizer_common/sanitizer_platform.h"
 #include "sanitizer_common/sanitizer_platform_interceptors.h"

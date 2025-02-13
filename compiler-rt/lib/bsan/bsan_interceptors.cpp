@@ -1,7 +1,7 @@
 
-#include "bsan_interceptors.h"
 #include "bsan.h"
-#include "bsanrt.h"
+#include "bsan_rt.h"
+#include "bsan_interceptors.h"
 #include "sanitizer_common/sanitizer_common.h"
 
 using namespace __sanitizer;
@@ -10,12 +10,13 @@ static bool interceptors_initialized = false;
 using namespace __bsan;
 
 INTERCEPTOR(void *, malloc, SIZE_T size) {
-  bsanrt::bsan_alloc((intptr_t)size);
-  return REAL(malloc)(size);
+  void * ptr = REAL(malloc)(size);
+  bsan_rt::bsan_alloc(ptr, size);
+  return ptr;
 }
 
 INTERCEPTOR(void, free, void *ptr) {
-  bsanrt::bsan_dealloc(ptr, 0, 0);
+  bsan_rt::bsan_dealloc(ptr, 0);
   return REAL(free)(ptr);
 }
 
