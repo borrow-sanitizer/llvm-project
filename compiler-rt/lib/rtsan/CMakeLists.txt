@@ -6,9 +6,6 @@ set(RTSAN_CXX_SOURCES
   rtsan_stack.cpp
   rtsan_interceptors.cpp)
 
-set(RTSAN_PREINIT_SOURCES
-  rtsan_preinit.cpp)
-
 set(RTSAN_HEADERS
   rtsan.h
   rtsan_context.h
@@ -40,11 +37,6 @@ else()
     ADDITIONAL_HEADERS ${RTSAN_HEADERS}
     CFLAGS ${RTSAN_CFLAGS}
     DEPS ${RTSAN_DEPS})
-  add_compiler_rt_object_libraries(RTRtsan_preinit
-    ARCHS ${RTSAN_SUPPORTED_ARCH}
-    SOURCES ${RTSAN_PREINIT_SOURCES}
-    ADDITIONAL_HEADERS ${RTSAN_HEADERS}
-    CFLAGS ${RTSAN_CFLAGS})
 endif()
 
 set(RTSAN_COMMON_RUNTIME_OBJECT_LIBS
@@ -79,7 +71,7 @@ else()
   add_compiler_rt_runtime(clang_rt.rtsan
     STATIC
     ARCHS ${RTSAN_SUPPORTED_ARCH}
-    OBJECT_LIBS RTRtsan_preinit
+    OBJECT_LIBS 
                 RTRtsan
                 ${RTSAN_COMMON_RUNTIME_OBJECT_LIBS}
     LINK_FLAGS ${RTSAN_LINK_FLAGS}
