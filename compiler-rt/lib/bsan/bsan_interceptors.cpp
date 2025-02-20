@@ -13,9 +13,7 @@
 
 using namespace __sanitizer;
 static bool interceptors_initialized = false;
-
 using namespace __bsan;
-
 
 namespace {
   struct DlsymAlloc : public DlSymAllocator<DlsymAlloc> {

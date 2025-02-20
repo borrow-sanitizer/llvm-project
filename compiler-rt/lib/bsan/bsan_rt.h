@@ -7,11 +7,26 @@
 namespace bsan_rt {
 #endif  // __cplusplus
 
+typedef void *(*Malloc)(uintptr_t);
+
+typedef void (*Free)(void*);
+
+typedef void *(*MMap)(void*, int, int, int, unsigned long long);
+
+typedef int (*MUnmap)(void*, uintptr_t);
+
+typedef struct BsanAllocator {
+  Malloc malloc;
+  Free free;
+  MMap mmap;
+  MUnmap munmap;
+} BsanAllocator;
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
 
-void bsan_init(void);
+void bsan_init(struct BsanAllocator alloc);
 
 void bsan_expose_tag(void *ptr);
 

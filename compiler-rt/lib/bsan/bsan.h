@@ -11,11 +11,12 @@
 using __sanitizer::uptr;
 
 namespace __bsan {
+    extern const bsan_rt::BsanAllocator gBsanAlloc;
     extern bool bsan_initialized;
     extern bool bsan_init_is_running;
     void InitializeInterceptors();
 } // namespace __bsan
 
-extern "C" SANITIZER_INTERFACE_ATTRIBUTE void __bsan_init();
+extern "C" SANITIZER_INTERFACE_ATTRIBUTE void __bsan_preinit();
 
 #endif

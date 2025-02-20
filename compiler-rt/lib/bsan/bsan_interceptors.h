@@ -33,4 +33,6 @@
 
 DECLARE_REAL_AND_INTERCEPTOR(void *, malloc, uptr)
 DECLARE_REAL_AND_INTERCEPTOR(void, free, void *)
+DECLARE_REAL_AND_INTERCEPTOR(void *, mmap, void *, int, int, int, OFF64_T)
+DECLARE_REAL_AND_INTERCEPTOR(int, munmap, void *, SIZE_T)
 #endif
